@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Draw a triangle</title>
+    <meta name="author" content="Jose Miguel Guerrero Hernandez">
+    <meta name="email" content="josemiguel.guerrero@urjc.es">
+    <!-- Copyright (c) 2023 Jose Miguel Guerrero Hernandez <josemiguel.guerrero@urjc.es> -->
+    <!-- License: Creative Commons Attribution-ShareAlike 4.0 International-->
+    <script src="triangulo.js" defer></script>
+
+</head>
+
+<body onload="init()">
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+    +
+</body>
+<script id="shaderVs" type="x-shader/x-vertex">
+    attribute vec4 a_Position;
+    void main() {
+        gl_Position = a_Position;
+    }
+</script>
+
+<script id="shaderFs" type="x-shader/x-fragment">
+    void main() {
+        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+</script>
+
+
+</html>
