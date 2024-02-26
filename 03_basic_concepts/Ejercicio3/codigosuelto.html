@@ -1,0 +1,148 @@
+
+if (clickCount % 3 === 0) {
+    var triangle = [];
+    if (triangles.length > 0) {
+        triangle.push(lastTwoPoints[0][0], lastTwoPoints[0][1]);
+        triangle.push(lastTwoPoints[1][0], lastTwoPoints[1][1]);
+    }
+    triangle.push(puntos[clickCount - 3][0], puntos[clickCount - 3][1]);
+    triangle.push(puntos[clickCount - 2][0], puntos[clickCount - 2][1]);
+    triangle.push(puntos[clickCount - 1][0], puntos[clickCount - 1][1]);
+    console.log(triangle)
+    triangles.push(triangle);
+    colors.push(colorsArray[currentColorIndex]);
+
+    currentColorIndex = (currentColorIndex + 1) % colorsArray.length;
+
+    // Store the last two points
+    lastTwoPoints = [puntos[clickCount - 2], puntos[clickCount - 1]];
+}
+
+
+
+// Draw existing triangles
+for (var i = 0; i < triangles.length; i++) {
+    var triangle = triangles[i];
+    var color = colors[i];
+
+    var vertices = new Float32Array(triangle);
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
+
+    var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
+    gl.uniform4fv(u_Color, color);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+
+
+
+<script id="shaderFs" type="x-shader/x-fragment">
+    void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+</script>
+
+
+
+
+
+function click(ev, gl, canvas) {
+    // Coordenadas del origen del lienzo
+    var rect = ev.target.getBoundingClientRect();
+    // Coordenada x relativa del clic en el lienzo
+    var clickX = ev.clientX - rect.left;
+    // Coordenada y relativa del clic en el lienzo
+    var clickY = ev.clientY - rect.top;
+    // Coordenadas WebGL (3D)
+    var halfCanvasWidth = canvas.width / 2;
+    var halfCanvasHeight = canvas.height / 2;
+    var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
+    var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
+    var xyz = [x, y, 0];
+    var punto = [x, y];
+
+    puntos.push(punto);
+    clickCount++;
+
+    // Limpiar el lienzo
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    var a_Position = gl.getAttribLocation(gl.program, "a_Position");
+
+    // ...
+    for (var i = 0; i < puntos.length; i++) {
+
+        if (i < 3) {
+            var verticesArray = puntos[i];
+            gl.vertexAttrib2fv(a_Position, verticesArray);
+            gl.drawArrays(gl.POINTS, 0, 1);
+            console.log(puntos);
+        } else {
+
+            var triangulo = [puntos[i][0], puntos[i][1], puntos[i - 1][0], puntos[i - 1][1], puntos[i - 2][0], puntos[i - 2][1]];
+            //     var color = colors[i];
+
+            var vertices = new Float32Array(triangulo);
+            var vertexBuffer = gl.createBuffer();
+            if (!vertexBuffer) {
+                console.log('Error al crear el objeto de búfer');
+                return -1;
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(a_Position);
+
+            //     var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
+            //     gl.uniform4fv(u_Color, color);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+        }
+    }
+}
+
+
+
+
+for (var i = 0 ;i< puntos.length; i++) {
+            
+    if (puntos.length < 3) {
+        var verticesArray = puntos[i];
+        gl.vertexAttrib2fv(a_Position, verticesArray);
+        gl.drawArrays(gl.POINTS, 0, 1);  
+        console.log(puntos)
+    } else {
+
+        var triangulo = [puntos[i][0], puntos[i][1], puntos[i-1][0],puntos[i-1][1],puntos[i-2][0],puntos[i-2][1]];
+        //     var color = colors[i];
+
+            var vertices = new Float32Array(triangulo);
+            var vertexBuffer = gl.createBuffer();
+            if (!vertexBuffer) {
+                console.log('Failed to create the buffer object');
+                return -1;
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(a_Position);
+
+        //     var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
+        //     gl.uniform4fv(u_Color, color);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        
+    }
+}
+}

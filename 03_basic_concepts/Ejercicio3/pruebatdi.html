@@ -115,14 +115,12 @@
                 gl.enableVertexAttribArray(a_Position);
 
                 // Establecer el color del triángulo
-                var color = colorsArray[i % colorsArray.length];
+                var color = colorsArray[[i -2]% colorsArray.length];
                 var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
                 gl.uniform4fv(u_Color, color);
 
-                // Dibujar el triángulo solo si i es mayor de 2
-                if (i >= 2) {
-                    gl.drawArrays(gl.TRIANGLES, 0, 3);
-                }
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
             }
         }
     }
