@@ -2,11 +2,10 @@
 <html>
 
 <head>
-    <title>Clear canvas</title>
-    <meta name="author" content="Jose Miguel Guerrero Hernandez">
-    <meta name="email" content="josemiguel.guerrero@urjc.es">
-    <!-- Copyright (c) 2023 Jose Miguel Guerrero Hernandez <josemiguel.guerrero@urjc.es> -->
-    <!-- License: Creative Commons Attribution-ShareAlike 4.0 International-->
+    <title>Ejercicio 3   </title>
+    <meta name="author" content="Daniel Pérez Gómez">
+    <meta name="email" content="d.perezg.2021@alumnos.urjc.es">
+
 </head>
 
 <body onload="init()">
@@ -69,8 +68,6 @@
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
-
-
     function click(ev) {
         var canvas = document.getElementById("myCanvas");
         var gl = canvas.getContext("webgl");
@@ -84,8 +81,7 @@
         var x = (clickX - halfCanvasWidth) / halfCanvasWidth;
         var y = (halfCanvasHeight - clickY) / halfCanvasHeight;
 
-        var punto = [x, y];
-
+         var punto = [x, y];
         puntos.push(punto);
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -93,43 +89,46 @@
 
         var a_Position = gl.getAttribLocation(gl.program, "a_Position");
 
-        if (puntos.length >= 3) {
-            for (var i = 0; i < puntos.length - 2; i ++) {
-                var triangulo = [
-                    puntos[i][0], puntos[i][1],
-                    puntos[i + 1][0], puntos[i + 1][1],
-                    puntos[i + 2][0], puntos[i + 2][1]
-                ];
-
-                var vertices = new Float32Array(triangulo);
-                var vertexBuffer = gl.createBuffer();
-                if (!vertexBuffer) {
-                    console.log('Error al crear el objeto de búfer');
-                    return -1;
-                }
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-                gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(a_Position);
-
-                // Establecer el color del triángulo
-                var color = colorsArray[i % colorsArray.length];
-                var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
-                gl.uniform4fv(u_Color, color);
-
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
-            }
-        }
 
         if (puntos.length < 3) {
             for (var i = 0; i < puntos.length; i++) {
-                var verticesArray = puntos[i];
-                gl.vertexAttrib2fv(a_Position, verticesArray);
-                gl.drawArrays(gl.POINTS, 0, 1);
+            var verticesArray = puntos[i];
+
+            var color = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+            var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
+            gl.uniform4fv(u_Color, color);
+
+            gl.vertexAttrib2fv(a_Position, verticesArray);
+            gl.drawArrays(gl.POINTS, 0, 1);
+            }
+        } else { 
+            for (var p = 0; p < puntos.length - 2; p++) {
+            var triangulo = [
+            puntos[p][0], puntos[p][1],
+            puntos[p + 1][0], puntos[p + 1][1],
+            puntos[p + 2][0], puntos[p + 2][1]
+            ];
+
+            var vertices = new Float32Array(triangulo);
+            var vertexBuffer = gl.createBuffer();
+            if (!vertexBuffer) {
+                console.log('Error al crear el objeto de búfer');
+                return -1;
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(a_Position);
+
+            var color = colorsArray[p % colorsArray.length];
+            var u_Color = gl.getUniformLocation(gl.program, 'u_Color');
+            gl.uniform4fv(u_Color, color);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
             }
         }
+ 
     }
-
 
     function initShaders(gl, vs_source, fs_source) {
         // Compile shaders
@@ -165,10 +164,5 @@
         }
         return shader;
     }
-    
 </script>
 </html>
-
-
-
-

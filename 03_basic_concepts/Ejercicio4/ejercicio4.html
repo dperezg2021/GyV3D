@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Ejercicio 4</title>
+    <meta name="author" content="Daniel Pérez Gómez">
+    <meta name="email" content="d.perezg.2021@urjc.es">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.2/gl-matrix-min.js"></script>
+</head>
+
+<script id="shaderVs" type="x-shader/x-vertex">
+    attribute vec4 a_Position;
+    uniform mat4 u_Matrix;
+    void main() {
+        gl_Position = u_Matrix * a_Position;
+    }
+</script>
+
+<script id="shaderFs" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform vec4 u_FragColor;
+    void main() {
+        gl_FragColor = u_FragColor;
+    }
+</script>
+
+<script>
+    var posicionx = 0.0;
+    var posiciony = 0.0;
+    var escala = 1.0;
+    var color = [1.0, 1.0, 0.0, 1.0];
+    var rotacionr1 = 0.0;
+    var rotacionr2 = 0.0;
+    var rad_ang = 0.0;
+    var rotacionxt = 0.0;
+    var rotacionyt = 0.0;
+
+
+
+    function init() {
+        var canvas = document.getElementById("myCanvas");
+        var gl = canvas.getContext("webgl");
+            if (!gl) {
+                console.log("Failed to get the rendering context for WebGL");
+                return;
+            }
+        var vs = document.getElementById('shaderVs').innerHTML;
+        var fs = document.getElementById('shaderFs').innerHTML;
+            if (!initShaders(gl, vs, fs)) {
+                console.log('Failed to intialize shaders.');
+                return;
+            }
+        initVertexBuffers(gl);
+        drawscene(gl);
+
+        document.onkeydown = function(ev) {
+        var step = new Number(document.getElementById("step").value);
+        switch (ev.key) {
+            case "ArrowLeft": // Left
+                posicionx -= step;
+                break;
+            case "ArrowRight": // Right
+                posicionx += step;
+                break;
+            case "ArrowUp": // Up
+                posiciony += step;
+                break;
+            case "ArrowDown": // Down
+                posiciony -= step;
+
+                break;
+            case "PageUp": // PageUp
+                escala += step;
+                break;
+            case "PageDown": // PageDown
+                escala -= step;
+                break;
+            case "w": // w
+                rotacionyt += step;
+                break
+            case "a": // a
+                rotacionxt -= step;
+                break;
+            case "s": // s
+                rotacionyt -= step;
+                break;
+            case "d": // d
+                rotacionxt  += step;
+                break;
+            case "z": // z
+            rad_ang += step;
+                break
+            case "x": // x
+            rotacionr1 -= step;
+                break
+            case "c": // c
+            rotacionr2 += step;
+                break
+        }
+        drawscene(gl);
+
+        };
+
+    }
+
+    function drawscene(gl) {
+        gl.clearColor(0.0, 0.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        //global 
+
+        var traslacionmatrizglobal = glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [posicionx, posiciony, 0.0]);
+        var scalamatrizglobal = glMatrix.mat4.fromScaling(glMatrix.mat4.create(), [escala, escala, 0.0]);
+        var matriz_global = glMatrix.mat4.multiply(glMatrix.mat4.create(), traslacionmatrizglobal, scalamatrizglobal);
+        //movimiento del tejado
+        var translatedtriangulo = glMatrix.mat4.fromTranslation(glMatrix.mat4.create(), [rotacionxt, rotacionyt, 0.0]);
+        var matriz_2 = glMatrix.mat4.multiply(glMatrix.mat4.create(), matriz_global, translatedtriangulo);
+    
+        // rotacion tejado
+        var rotatetriangulo = glMatrix.mat4.fromYRotation(glMatrix.mat4.create(), rad_ang);
+        var matriz_1 = glMatrix.mat4.multiply(glMatrix.mat4.create(), matriz_2, rotatetriangulo);
+        var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
+        gl.uniformMatrix4fv(mvMatrixUniform, false, matriz_1);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        // rotacion columna1
+        var rotater1Z = glMatrix.mat4.fromZRotation(glMatrix.mat4.create(), rotacionr1);
+        var matriz_3 = glMatrix.mat4.multiply(glMatrix.mat4.create(), matriz_global, rotater1Z);
+        var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
+        gl.uniformMatrix4fv(mvMatrixUniform, false, matriz_3);
+        gl.drawArrays(gl.TRIANGLES, 3, 6);
+        //rotación columna2
+        var rotater2Z = glMatrix.mat4.fromZRotation(glMatrix.mat4.create(), rotacionr2);
+        var matriz_4 = glMatrix.mat4.multiply(glMatrix.mat4.create(), matriz_global, rotater2Z);
+        var mvMatrixUniform = gl.getUniformLocation(gl.program, "u_Matrix");
+        gl.uniformMatrix4fv(mvMatrixUniform, false, matriz_4);
+        gl.drawArrays(gl.TRIANGLES, 9, 6);
+        
+        requestAnimationFrame(function() {
+            drawscene(gl)
+        });
+    }
+
+
+    function initVertexBuffers(gl) {
+        var vertices = new Float32Array([
+        -0.8, 0.0, 0.0, 0.6, 0.8, 0.0,
+
+        -0.5, 0.0, -0.5, -0.8, -0.2, 0.0,
+        -0.5, -0.8, -0.2, 0.0, -0.2, -0.8,
+    
+        0.2, 0.0, 0.2, -0.8, 0.5, 0.0,
+        0.2, -0.8, 0.5, 0.0, 0.5, -0.8
+        ]);
+
+        var vertexBuffer = gl.createBuffer();
+        if (!vertexBuffer) {
+            console.log('Failed to create the buffer object');
+            return -1;
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+     
+
+
+        var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+        if (a_Position < 0) {
+            console.log('Failed to get the storage location of a_Position');
+            return -1;
+        }
+        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Position);
+        var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+        if (u_FragColor < 0) {
+            console.log('Failed to get the storage location of u_FragColor');
+            return -1;
+        }
+        gl.uniform4fv(u_FragColor, color);
+    }
+
+
+    function initShaders(gl, vs_source, fs_source) {
+        // Compile shaders
+        var vertexShader = makeShader(gl, vs_source, gl.VERTEX_SHADER);
+        var fragmentShader = makeShader(gl, fs_source, gl.FRAGMENT_SHADER);
+
+        // Create program
+        var glProgram = gl.createProgram();
+
+        // Attach and link shaders to the program
+        gl.attachShader(glProgram, vertexShader);
+        gl.attachShader(glProgram, fragmentShader);
+        gl.linkProgram(glProgram);
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+            alert("Unable to initialize the shader program");
+            return false;
+        }
+
+        // Use program
+        gl.useProgram(glProgram);
+        gl.program = glProgram;
+
+        return true;
+    }
+
+    function makeShader(gl, src, type) {
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert("Error compiling shader: " + gl.getShaderInfoLog(shader));
+            return;
+        }
+        return shader;
+    }
+</script>
+
+<body onload="init()">
+    <canvas id="myCanvas" width="640" height="480"></canvas>
+    <br>
+    Step: <input type="text" value="0.01" id="step">
+</body>
+
+</html>
+
+
