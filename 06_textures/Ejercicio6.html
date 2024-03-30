@@ -2,14 +2,13 @@
 <html>
 
 <head>
-    <title>WebGL projections: viewport change</title>
-    <meta name="author" content="Jose Miguel Guerrero Hernandez">
-    <meta name="email" content="josemiguel.guerrero@urjc.es">
-    <!-- Copyright (c) 2023 Jose Miguel Guerrero Hernandez <josemiguel.guerrero@urjc.es> -->
-    <!-- License: Creative Commons Attribution-ShareAlike 4.0 International-->
-</head>
+    <title>Ejercicio6</title>
+    <meta name="author" content="Daniel Pérez Gómez">
+    <meta name="email" content="d.perezg.2021@urjc.es">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.2/gl-matrix-min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/3.4.2/gl-matrix-min.js"></script>
+
+</head>
 
 <script id="shaderVs" type="x-shader/x-vertex">
     attribute vec4 a_Position;
@@ -29,15 +28,27 @@
 <script id="shaderFs" type="x-shader/x-fragment">
     precision mediump float;
     uniform sampler2D u_Sampler;
+    uniform sampler2D u_DecorationSampler;
     varying vec2 v_TexCoord;
 
     void main(void) {
-        gl_FragColor = texture2D(u_Sampler, v_TexCoord);
+        vec4 textureColor = texture2D(u_Sampler, v_TexCoord);
+        vec4 decorationColor = texture2D(u_DecorationSampler, v_TexCoord); // Retrieve decoration texture color
+        
+        // Check if decoration is applied
+        if (decorationColor.a > 0.0) {
+            // Apply decoration texture if it's applied
+            gl_FragColor = mix(textureColor, decorationColor, decorationColor.a);
+        } else {
+            // Otherwise, use the original texture color
+            gl_FragColor = textureColor;
+        }
     }
 </script>
 
 <script>
     var z = 3;
+    var camaray = 0;
 
     function init() {
         // Variables
@@ -74,7 +85,28 @@
 
         // Init textures
         initTexturesAndDraw(gl, rad_ang,canvas);
+
+        document.onkeydown = function(ev) {
+        var step = new Number(document.getElementById("step").value);
+        switch (ev.key) {
+            case "ArrowUp": // Up
+                camaray += step;
+            break;
+            case "ArrowDown": // Down
+                camaray -= step;
+            break;
+        }
+        initTexturesAndDraw(gl, rad_ang,canvas);
+        initVertexBuffers(gl);
+
+
+        };
+
     }
+
+
+
+
 
     function initVertexBuffers(gl) {
         // Vertexes and texture coordinates
@@ -261,7 +293,7 @@
         gl.uniformMatrix4fv(pMatrixUniform, false, pMatrix);
 
         var vMatrixUniform = gl.getUniformLocation(gl.program, "u_vMatrix");
-        var vMatrix = glMatrix.mat4.lookAt(glMatrix.mat4.create(), [0, 0, z], [0, 0, 0], [0, 1, 0]);
+        var vMatrix = glMatrix.mat4.lookAt(glMatrix.mat4.create(), [0, camaray, z], [0, 0, 0], [0, 1, 0]);
         gl.uniformMatrix4fv(vMatrixUniform, false, vMatrix);
 
     }
@@ -406,6 +438,9 @@
 
 <body onload="init()">
     <canvas id="myCanvas" width="640" height="480"></canvas><br>
+    <br>
+    Step: <input type="text" value="0.01" id="step">
+    <br>
     <b>Rotation</b>
     <input type="checkbox" name="rotation" checked>
     <input type="range" id="speed" min="1" max="3" value="1" step="1"> Speed<br>
