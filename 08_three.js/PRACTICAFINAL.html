@@ -10,9 +10,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.148.0/three.min.js"></script>
 <script>
 
-var pacmanX = 0.1;
-var pacmanY = 0.2;
-
+var pacmanX = 0;
+var pacmanY = 0;
+var gameStarted = false;
 
     function init() {
       var scene = new THREE.Scene();
@@ -133,27 +133,58 @@ var pacmanY = 0.2;
       BORDEEXTRA10, BORDEEXTRA11, BORDEEXTRA12,
       BORDEEXTRA13, BORDEEXTRA14,  BORDEEXTRA15, 
       BORDEEXTRA16,BORDEEXTRA17];
+      document.addEventListener('keydown', handleKeyDown);
 
       animate(ghosts, borders, renderer, scene, camera, pacman);   
 }
 
+function handleKeyDown(event) {
+    if (!gameStarted) {
+        gameStarted = true;
+        collisionDetected = false;
+    }
+    switch (event.keyCode) {
+        case 37: // Flecha izquierda
+            pacmanX = -0.1;
+            pacmanY = 0;
+            break;
+        case 38: // Flecha arriba
+            pacmanX = 0;
+            pacmanY = 0.1;
+            break;
+        case 39: // Flecha derecha
+            pacmanX = 0.1;
+            pacmanY = 0;
+            break;
+        case 40: // Flecha abajo
+            pacmanX = 0;
+            pacmanY = -0.1;
+            break;
+    }
+
+}
+
 function animate(ghosts, borders, renderer, scene, camera, pacman) {
-   for (let i = 0; i < ghosts.length; i++) {
-      checkCollisionGhost(ghosts[i], borders);
+    if (gameStarted) {
+        for (let i = 0; i < ghosts.length; i++) {
+            checkCollisionGhost(ghosts[i], borders);
 
-      ghosts[i].position.x += ghosts[i].stepX;
-      ghosts[i].position.y += ghosts[i].stepY;
-   }
+            ghosts[i].position.x += ghosts[i].stepX;
+            ghosts[i].position.y += ghosts[i].stepY;
+        }
 
-   checkCollisionPacman(pacman, borders);
-   pacman.position.x += pacmanX;
-   pacman.position.y += pacmanY;
+        checkCollisionPacman(pacman, borders);
+        pacman.position.x += pacmanX;
+        pacman.position.y += pacmanY;
+        console.log(pacmanX);
+         console.log(pacmanY);
+    }
 
-   renderer.render(scene, camera);
+    renderer.render(scene, camera);
 
-   renderer.setAnimationLoop(function() {
+    renderer.setAnimationLoop(function() {
         animate(ghosts, borders, renderer, scene, camera, pacman);
-   });
+    });
 }
 
 function getRandomNumber(min, max) {
@@ -290,8 +321,7 @@ function checkCollisionPacman(pacman, borders) {
     }
 
     if (!collisionDetected) {
-        pacmanX = 0.1; 
-        pacmanY = 0.2;
+
     } else {
         pacmanX = 0;
         pacmanY = 0;
@@ -299,15 +329,8 @@ function checkCollisionPacman(pacman, borders) {
 
 }
 
-
-
 </script>
 
 <body onload="init()"></body>
 
 </html>
-
-
-
-
-
