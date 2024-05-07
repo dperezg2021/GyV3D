@@ -12,7 +12,9 @@
 
 var pacmanX = 0;
 var pacmanY = 0;
-var gameStarted = false;
+var pacManLives = 3;
+var potenciadorActive = false;
+var potenciadorTime = 10000; // 10 segundos en milisegundos
 
     function init() {
       var scene = new THREE.Scene();
@@ -52,21 +54,29 @@ var gameStarted = false;
 
       var BORDEEXTRA7 = getBorder("top", 15, 1, 2, 0, 11, 0);
       var BORDEEXTRA8 = getBorder("right", 1, 7, 2, 7, 7, 0);
+      var BORDEEXTRA8_1 = getBorder("top", 1, 7, 2, 7, 7, 0);
+
+
       var BORDEEXTRA9 = getBorder("left", 1, 7, 2, -7, 7, 0);
+      var BORDEEXTRA9_1 = getBorder("top", 1, 7, 2, -7, 7, 0);
+
 
       // Cuadrado interior parte inferior
 
       var BORDEEXTRA10 = getBorder("top", 15, 1, 2, 0, -11, 0);
       var BORDEEXTRA11 = getBorder("right", 1, 7, 2, 7, -7, 0);
-      var BORDEEXTRA12 = getBorder("left", 1, 7, 2, -7, -7, 0);  
+      var BORDEEXTRA11_1 = getBorder("top", 1, 7, 2, 7, -7, 0);
+      var BORDEEXTRA12 = getBorder("left", 1, 7, 2, -7, -7, 0);
+      var BORDEEXTRA12_1 = getBorder("top", 1, 7, 2, -7, -7, 0);  
+  
 
    // Cuadrado interior parte interior fantasmas
 
-      var BORDEEXTRA13 = getBorder("top", 7, 1, 2, 0, -1, 0);
+      var BORDEEXTRA13 = getBorder("top", 7, 1, 2, 0, -2, 0);
 
-      var BORDEEXTRA14 = getBorder("right", 1, 2, 2, 3, 0, 0);
+      var BORDEEXTRA14 = getBorder("right", 1, 2, 2, 3, -1, 0);
 
-      var BORDEEXTRA15 = getBorder("left", 1, 2, 2, -3, 0, 0); 
+      var BORDEEXTRA15 = getBorder("left", 1, 2, 2, -3, -1, 0); 
 
    // lineas horizontales fuera del cuadrado interior
       var BORDEEXTRA16 = getBorder("top", 2, 1, 2, -19, 0, 0);
@@ -74,16 +84,18 @@ var gameStarted = false;
   
 
    // personajes
+      var prueba = 0;
+      //getRandomNumber(0.1, 0.3);
       var pacman = getSphere(0,-16,1, "pacman",1);
       var ghost1 = getSphere(-2, 0, 1, "ghost1",0);
-      ghost1.stepX = getRandomNumber(0.1, 0.3);
-      ghost1.stepY = getRandomNumber(0.1, 0.3);
+      ghost1.stepX = prueba;
+      ghost1.stepY = prueba;
       var ghost2 = getSphere(0, 1, 1, "ghost2",0);
-      ghost2.stepX = getRandomNumber(0.1, 0.3);
-      ghost2.stepY = getRandomNumber(0.1, 0.3);
+      ghost2.stepX = prueba;
+      ghost2.stepY = prueba;
       var ghost3 = getSphere(2, 0, 1, "ghost3",0);
-      ghost3.stepX = getRandomNumber(0.1, 0.3);
-      ghost3.stepY = getRandomNumber(0.1, 0.3);
+      ghost3.stepX = prueba;
+      ghost3.stepY = prueba;
 
       var potenciador1 = getSphere(-20,20,1, "potenciador1",2);
       var potenciador2 = getSphere(20,20,1, "potenciador2",2);
@@ -125,7 +137,7 @@ var gameStarted = false;
       scene.add(floor);
 
       var ghosts = [ghost1, ghost2, ghost3];
-
+      var potenciadores = [potenciador1,potenciador2,potenciador3, potenciador4];
       var borders = [ leftBorder, rightBorder, topBorder, downBorder, 
       BORDEEXTRA1, BORDEEXTRA2, BORDEEXTRA3,
       BORDEEXTRA4, BORDEEXTRA5, BORDEEXTRA6, 
@@ -133,16 +145,13 @@ var gameStarted = false;
       BORDEEXTRA10, BORDEEXTRA11, BORDEEXTRA12,
       BORDEEXTRA13, BORDEEXTRA14,  BORDEEXTRA15, 
       BORDEEXTRA16,BORDEEXTRA17];
-      document.addEventListener('keydown', handleKeyDown);
 
-      animate(ghosts, borders, renderer, scene, camera, pacman);   
+      animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores);   
 }
 
 function handleKeyDown(event) {
-    if (!gameStarted) {
-        gameStarted = true;
-        collisionDetected = false;
-    }
+
+    collisionDetected = false;
     switch (event.keyCode) {
         case 37: // Flecha izquierda
             pacmanX = -0.1;
@@ -151,6 +160,7 @@ function handleKeyDown(event) {
         case 38: // Flecha arriba
             pacmanX = 0;
             pacmanY = 0.1;
+            console.log("brrrr");
             break;
         case 39: // Flecha derecha
             pacmanX = 0.1;
@@ -164,26 +174,35 @@ function handleKeyDown(event) {
 
 }
 
-function animate(ghosts, borders, renderer, scene, camera, pacman) {
-    if (gameStarted) {
+function animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores) {
+   document.addEventListener('keydown', handleKeyDown);
+
         for (let i = 0; i < ghosts.length; i++) {
-            checkCollisionGhost(ghosts[i], borders);
+
+            checkCollisionGhost(ghosts[i], borders); 
 
             ghosts[i].position.x += ghosts[i].stepX;
             ghosts[i].position.y += ghosts[i].stepY;
         }
-
         checkCollisionPacman(pacman, borders);
+        checkCollisionGhostsPacman(pacman, ghosts, scene);
+        checkCollisionPotenciador(pacman,potenciadores, scene);
         pacman.position.x += pacmanX;
         pacman.position.y += pacmanY;
-        console.log(pacmanX);
-         console.log(pacmanY);
-    }
+
+    if (potenciadorActive) {
+            potenciadorTime -= 16; // Restar tiempo de fotograma (aprox. 60 FPS)
+            if (potenciadorTime <= 0) {
+                potenciadorActive = false;
+                potenciadorTime = 10000; // Reiniciar el temporizador
+            }
+        }
+    
 
     renderer.render(scene, camera);
 
     renderer.setAnimationLoop(function() {
-        animate(ghosts, borders, renderer, scene, camera, pacman);
+      animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores);
     });
 }
 
@@ -295,38 +314,115 @@ function checkCollisionGhost(ghost, borders) {
    }
 }
 
-function checkCollisionPacman(pacman, borders) {
-    var originPosition = pacman.position.clone();
+let collisionDetected = false; // Bandera para indicar si la colisión ha ocurrido
 
+function checkCollisionPacman(pacman, borders) {
+    if (!collisionDetected) { // Solo realizar la detección de colisión si no se ha detectado antes
+        var originPosition = pacman.position.clone();
+
+        const positionAttribute = pacman.geometry.getAttribute('position');
+        const localVertex = new THREE.Vector3();
+        const globalVertex = new THREE.Vector3();
+
+        for (let vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++) {
+            localVertex.fromBufferAttribute(positionAttribute, vertexIndex);
+            globalVertex.copy(localVertex).applyMatrix4(pacman.matrixWorld);
+            var directionVector = globalVertex.sub(pacman.position);
+            var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
+            var collisionResults = ray.intersectObjects(borders);
+
+            if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+                if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right" ||
+                    collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
+                    collisionDetected = true;
+                    break;
+                    collisionDetected = false;
+                }
+            }
+        }
+    }
+
+    if (!collisionDetected) {
+        pacman.position.x += pacmanX;
+        pacman.position.y += pacmanY;
+    } else {
+        pacman.position.x += pacmanX;
+        pacmanX = 0;
+        pacman.position.y += pacmanY;
+        pacmanY = 0;
+    }
+}
+
+function checkCollisionGhostsPacman(pacman, ghost, scene) {
+    var originPosition = pacman.position.clone();
     const positionAttribute = pacman.geometry.getAttribute('position');
     const localVertex = new THREE.Vector3();
     const globalVertex = new THREE.Vector3();
-
-    let collisionDetected = false; 
 
     for (let vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++) {
         localVertex.fromBufferAttribute(positionAttribute, vertexIndex);
         globalVertex.copy(localVertex).applyMatrix4(pacman.matrixWorld);
         var directionVector = globalVertex.sub(pacman.position);
         var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
-        var collisionResults = ray.intersectObjects(borders);
-        
-        if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
-            if (collisionResults[0].object.name == "left" || collisionResults[0].object.name == "right" ||
-                collisionResults[0].object.name == "down" || collisionResults[0].object.name == "top") {
-                collisionDetected = true;
-                break;
+        var collisionResults = ray.intersectObjects(ghost);
+
+        if (collisionResults.length > 0 && collisionResults[0].distance < 0.15) {
+            var collidedGHOST = collisionResults[0].object;
+            if (collidedGHOST.name.startsWith("ghost")) {
+                scene.remove(collidedGHOST); 
+                for (let i = 0; i < ghost.length; i++) { 
+                    if (ghost[i] === collidedGHOST) { 
+                        ghost.splice(i, 1); 
+                        console.log(ghost);
+                        break; 
+                    }
+                }
             }
         }
     }
+}
 
-    if (!collisionDetected) {
+function checkCollisionPotenciador(pacman, potenciadores, scene) {
+    var originPosition = pacman.position.clone();
+    const positionAttribute = pacman.geometry.getAttribute('position');
+    const localVertex = new THREE.Vector3();
+    const globalVertex = new THREE.Vector3();
 
-    } else {
-        pacmanX = 0;
-        pacmanY = 0;
+    for (let vertexIndex = 0; vertexIndex < positionAttribute.count; vertexIndex++) {
+        localVertex.fromBufferAttribute(positionAttribute, vertexIndex);
+        globalVertex.copy(localVertex).applyMatrix4(pacman.matrixWorld);
+        var directionVector = globalVertex.sub(pacman.position);
+        var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
+        var collisionResults = ray.intersectObjects(potenciadores);
+
+        if (collisionResults.length > 0 && collisionResults[0].distance < 0.25) {
+            var collidedPotenciador = collisionResults[0].object;
+            if (collidedPotenciador.name.startsWith("potenciador")) {
+                scene.remove(collidedPotenciador); 
+                for (let i = 0; i < potenciadores.length; i++) { 
+                    if (potenciadores[i] === collidedPotenciador) { 
+                        potenciadores.splice(i, 1); 
+                        console.log(potenciadores);
+                        break; 
+                    }
+                }
+                // Activar la bandera potenciadorActive
+                potenciadorActive = true;
+                // Iniciar el temporizador
+                iniciarTemporizador();
+            }
+        }
     }
+}
 
+function iniciarTemporizador() {
+    // Iniciar el temporizador
+    const tiempoEspera = 10000; // 10 segundos en milisegundos
+    setTimeout(function() {
+        console.log("Han pasado 10 segundos");
+        // Desactivar la bandera potenciadorActive después de 10 segundos
+        potenciadorActive = false;
+    }, tiempoEspera);
 }
 
 </script>
