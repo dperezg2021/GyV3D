@@ -15,8 +15,15 @@ var pacmanY = 0;
 var pacManLives = 3;
 var potenciadorActive = false;
 var potenciadorTime = 10000; // 10 segundos en milisegundos
+var juegoend = false;
 
-    function init() {
+
+function updateLives() {
+    var livesElement = document.getElementById("vidas");
+    livesElement.innerHTML = "Vidas restantes: " + pacManLives;
+}
+    function init() { 
+    updateLives(); // Actualizar el contador de vidas al iniciar el juego
       var scene = new THREE.Scene();
       var sceneWidth = window.innerWidth - 20;
       var sceneHeight = window.innerHeight - 20;
@@ -87,7 +94,7 @@ var potenciadorTime = 10000; // 10 segundos en milisegundos
       var prueba = 0;
       //getRandomNumber(0.1, 0.3);
       var pacman = getSphere(0,-16,1, "pacman",1);
-      var ghost1 = getSphere(-2, 0, 1, "ghost1",0);
+      var ghost1 = getSphere(-2, -18, 1, "ghost1",0);//// cambiar 
       ghost1.stepX = prueba;
       ghost1.stepY = prueba;
       var ghost2 = getSphere(0, 1, 1, "ghost2",0);
@@ -96,7 +103,7 @@ var potenciadorTime = 10000; // 10 segundos en milisegundos
       var ghost3 = getSphere(2, 0, 1, "ghost3",0);
       ghost3.stepX = prueba;
       ghost3.stepY = prueba;
-
+    
       var potenciador1 = getSphere(-20,20,1, "potenciador1",2);
       var potenciador2 = getSphere(20,20,1, "potenciador2",2);
       var potenciador3 = getSphere(-20,-20,1, "potenciador3",2);
@@ -146,8 +153,8 @@ var potenciadorTime = 10000; // 10 segundos en milisegundos
       BORDEEXTRA13, BORDEEXTRA14,  BORDEEXTRA15, 
       BORDEEXTRA16,BORDEEXTRA17];
 
-      animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores);   
-}
+       animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores,ghost1,ghost2,ghost3,potenciador1,potenciador2,potenciador3, potenciador4);   
+    }
 
 function handleKeyDown(event) {
 
@@ -160,7 +167,6 @@ function handleKeyDown(event) {
         case 38: // Flecha arriba
             pacmanX = 0;
             pacmanY = 0.1;
-            console.log("brrrr");
             break;
         case 39: // Flecha derecha
             pacmanX = 0.1;
@@ -174,37 +180,32 @@ function handleKeyDown(event) {
 
 }
 
-function animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores) {
+function animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores,ghost1,ghost2,ghost3, potenciador1,potenciador2,potenciador3, potenciador4) {
    document.addEventListener('keydown', handleKeyDown);
 
-        for (let i = 0; i < ghosts.length; i++) {
+    for (let i = 0; i < ghosts.length; i++) {
+        
 
-            checkCollisionGhost(ghosts[i], borders); 
+        checkCollisionGhost(ghosts[i], borders); 
 
-            ghosts[i].position.x += ghosts[i].stepX;
-            ghosts[i].position.y += ghosts[i].stepY;
-        }
-        checkCollisionPacman(pacman, borders);
-        checkCollisionGhostsPacman(pacman, ghosts, scene);
-        checkCollisionPotenciador(pacman,potenciadores, scene);
-        pacman.position.x += pacmanX;
-        pacman.position.y += pacmanY;
-
-    if (potenciadorActive) {
-            potenciadorTime -= 16; // Restar tiempo de fotograma (aprox. 60 FPS)
-            if (potenciadorTime <= 0) {
-                potenciadorActive = false;
-                potenciadorTime = 10000; // Reiniciar el temporizador
-            }
-        }
-    
+        ghosts[i].position.x += ghosts[i].stepX;
+        ghosts[i].position.y += ghosts[i].stepY;
+    }
+    checkCollisionPacman(pacman, borders);
+    checkCollisionGhostsPacman(pacman, ghosts, scene);
+    checkCollisionPotenciador(pacman,potenciadores, scene,ghosts);
+    pacman.position.x += pacmanX;
+    pacman.position.y += pacmanY;
 
     renderer.render(scene, camera);
+    updateLives(); // Actualizar el contador de vidas en cada cuadro de animación
+    checkGameOver(scene,potenciadores,ghosts); // Llamar a la función GameOver
 
     renderer.setAnimationLoop(function() {
-      animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores);
+      animate(ghosts, borders, renderer, scene, camera, pacman, potenciadores,ghost1,ghost2,ghost3,potenciador1,potenciador2,potenciador3, potenciador4);
     });
 }
+
 
 function getRandomNumber(min, max) {
    return Math.random() * (max - min) + min;
@@ -215,17 +216,17 @@ function getLight() {
    light.position.set(4, 4, 4);
    light.castShadow = true;
    light.shadow.camera.near = 0;
-   light.shadow.camera.far = 16;
-   light.shadow.camera.left = -8;
-   light.shadow.camera.right = 5;
-   light.shadow.camera.top = 10;
-   light.shadow.camera.bottom = -10;
+   light.shadow.camera.far = 40;
+   light.shadow.camera.left = -25;
+   light.shadow.camera.right = 25;
+   light.shadow.camera.top = 20;
+   light.shadow.camera.bottom = -20;
    light.shadow.mapSize.width = 4096;
    light.shadow.mapSize.height = 4096;
    return light;
 }
 
-function getSphere(px,py,pz,name,textura,) {
+function getSphere(px,py,pz,name,textura) {
       var geometry = new THREE.SphereGeometry(1, 15, 15);
       var material = new THREE.MeshNormalMaterial();
       if (textura == 0 ){
@@ -314,7 +315,7 @@ function checkCollisionGhost(ghost, borders) {
    }
 }
 
-let collisionDetected = false; // Bandera para indicar si la colisión ha ocurrido
+let collisionDetected = false; 
 
 function checkCollisionPacman(pacman, borders) {
     if (!collisionDetected) { // Solo realizar la detección de colisión si no se ha detectado antes
@@ -353,7 +354,7 @@ function checkCollisionPacman(pacman, borders) {
     }
 }
 
-function checkCollisionGhostsPacman(pacman, ghost, scene) {
+function checkCollisionGhostsPacman(pacman, ghosts, scene) {
     var originPosition = pacman.position.clone();
     const positionAttribute = pacman.geometry.getAttribute('position');
     const localVertex = new THREE.Vector3();
@@ -364,25 +365,31 @@ function checkCollisionGhostsPacman(pacman, ghost, scene) {
         globalVertex.copy(localVertex).applyMatrix4(pacman.matrixWorld);
         var directionVector = globalVertex.sub(pacman.position);
         var ray = new THREE.Raycaster(originPosition, directionVector.clone().normalize());
-        var collisionResults = ray.intersectObjects(ghost);
+        var collisionResults = ray.intersectObjects(ghosts);
 
         if (collisionResults.length > 0 && collisionResults[0].distance < 0.15) {
-            var collidedGHOST = collisionResults[0].object;
-            if (collidedGHOST.name.startsWith("ghost")) {
-                scene.remove(collidedGHOST); 
-                for (let i = 0; i < ghost.length; i++) { 
-                    if (ghost[i] === collidedGHOST) { 
-                        ghost.splice(i, 1); 
-                        console.log(ghost);
-                        break; 
+            var collidedGhost = collisionResults[0].object;
+            if (potenciadorActive) { // Si potenciadores activos, pacman puede comer fantasmas
+                scene.remove(collidedGhost);
+                for (let i = 0; i < ghosts.length; i++) {
+                    if (ghosts[i] === collidedGhost) {
+                        ghosts.splice(i, 1);
+                        console.log(ghosts);
+                        break;
                     }
                 }
+            } else { // Si potenciadores no activos, el pacman vuelve a su posición inicial y pierde una vida
+                pacman.position.set(0, -16, 1); // Volver a la posición inicial del pacman
+                pacmanX = 0;
+                pacmanY = 0;
+                pacManLives--; // Reducir en uno el contador de vidas
+                console.log("Vidas restantes: " + pacManLives);
             }
         }
     }
 }
 
-function checkCollisionPotenciador(pacman, potenciadores, scene) {
+function checkCollisionPotenciador(pacman, potenciadores, scene,ghosts) {
     var originPosition = pacman.position.clone();
     const positionAttribute = pacman.geometry.getAttribute('position');
     const localVertex = new THREE.Vector3();
@@ -406,27 +413,72 @@ function checkCollisionPotenciador(pacman, potenciadores, scene) {
                         break; 
                     }
                 }
-                // Activar la bandera potenciadorActive
                 potenciadorActive = true;
-                // Iniciar el temporizador
-                iniciarTemporizador();
+                console.log("Potenciador on");
+                iniciarTemporizador(ghosts);
             }
         }
     }
 }
 
-function iniciarTemporizador() {
-    // Iniciar el temporizador
-    const tiempoEspera = 10000; // 10 segundos en milisegundos
+function iniciarTemporizador(ghosts) {
+
+    const tiempoEspera = 10000;
+    for (let i = 0; i < ghosts.length; i++) {
+            ghosts[i].material = getMaterial("verdee.jpg");
+        }
     setTimeout(function() {
         console.log("Han pasado 10 segundos");
-        // Desactivar la bandera potenciadorActive después de 10 segundos
         potenciadorActive = false;
+        for (let i = 0; i < ghosts.length; i++) {
+            ghosts[i].material = getMaterial("fantasma1.webp");
+        }
     }, tiempoEspera);
 }
 
+
+function checkGameOver(scene,potenciadores,ghosts) {
+    if (pacManLives === 0 || (potenciadores.length === 0 && !potenciadorActive)|| (ghosts.length === 0)) {
+        document.getElementById("restart").style.display= "block";
+        if (pacManLives === 0){
+            console.log("te quedaste sin vidas")
+        } else if ((ghosts.length === 0))
+        console.log("ganaste")
+
+    }
+}
+
+function pepe (){
+    document.getElementById("restart").addEventListener('click', function(){
+        reset();
+    });
+}
+
+function reset(){
+    var borrarcanvas = document.querySelector('Canvas');
+        if (borrarcanvas) {
+            borrarcanvas.remove();
+        }
+    document.getElementById("vidas").innerText = "Vidas restantes: " + pacManLives;
+    var pacmanX = 0;
+    var pacmanY = 0;
+    var pacManLives = 3;
+    var potenciadorActive = false;
+    var potenciadorTime = 10000; // 10 segundos en milisegundos
+    var juegoend = false;
+
+
+    init();
+}
+
+
 </script>
 
-<body onload="init()"></body>
+<body onload="init();pepe">
+    <div id="vidas">Vidas restantes: 3</div>
+    <button id = "restart" style = "display:none">RESTART</button>
+    <div id = "mensaje"></div>
+
+</body>
 
 </html>
